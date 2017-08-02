@@ -4,8 +4,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -27,7 +35,7 @@ import org.bn.compiler.parser.model.ASNModule;
 public class BNCompilerMojo extends AbstractMojo {
     private final static String version = "1.6.0";
 
-    @Parameter(required = false, defaultValue = "modules/")
+    @Parameter(required = false, defaultValue = "/modules")
     private String modulesPath;
 
     @Parameter(required = true)
@@ -68,8 +76,14 @@ public class BNCompilerMojo extends AbstractMojo {
 
     }
 
+    private InputStream retrieveASN1file(String path) throws URISyntaxException, IOException {
+        String inputFile = this.getClass().getResource(path).getFile();
+                  
+        return new FileInputStream(inputFile);
+    }
+    
     private ASN1Model createModelFromStream() throws Exception {
-        InputStream stream = new FileInputStream(inputFileName);
+        InputStream stream = retrieveASN1file(inputFileName);
         ASNLexer lexer = new ASNLexer(stream);
         ASNParser parser = new ASNParser(lexer);
         ASNModule module = new ASNModule();
@@ -99,7 +113,7 @@ public class BNCompilerMojo extends AbstractMojo {
             System.err.println(ex);
         }
     }
-
+    
     public void start() throws Exception {
         String outputDireWithNamespace = outputDir + File.separator + namespace.replace(".", File.separator);
         Module module = new Module(modulesPath, moduleName, outputDireWithNamespace);

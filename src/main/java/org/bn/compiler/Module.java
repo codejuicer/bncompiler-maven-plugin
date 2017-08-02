@@ -19,7 +19,15 @@ package org.bn.compiler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.Transformer;
@@ -62,12 +70,25 @@ public class Module {
         return result;
     }
 
+    private File retrieveModulesFiles(String path) throws URISyntaxException, IOException {
+        URI uri = this.getClass().getResource(path).toURI();
+        Path modulesPath;
+        if (uri.getScheme().equals("jar")) {
+            FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
+            modulesPath = fileSystem.getPath("/resources");
+        } else {
+            modulesPath = Paths.get(uri);
+        }
+          
+        return modulesPath.toFile();
+    }
+    
     private void loadTransformations() throws Exception {
         System.out.println("modulesPath = " + getModulesPath());
         System.out.println("moduleName = " + getModuleName());
         
-        File basePath = new File(getModulesPath() + File.separator
-                                 + getModuleName());
+        File basePath =retrieveModulesFiles(getModulesPath() + File.separator
+                             + getModuleName());
 
         if (basePath.isDirectory()) {
             moduleFiles = basePath.listFiles();

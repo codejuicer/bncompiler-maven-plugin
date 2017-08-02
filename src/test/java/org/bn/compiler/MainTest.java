@@ -31,49 +31,49 @@ public class MainTest extends TestCase {
         BNCompilerMojo compiler = new BNCompilerMojo();
         Field modulesPath = compiler.getClass().getDeclaredField("modulesPath");
         modulesPath.setAccessible(true);
-        modulesPath.set(compiler, "xslsrc" + File.separator + "modules");
-        
+        modulesPath.set(compiler, "/modules");
+
         Field moduleName = compiler.getClass().getDeclaredField("moduleName");
         moduleName.setAccessible(true);
         moduleName.set(compiler, "java");
-        
+
         Field outputDir = compiler.getClass().getDeclaredField("outputDir");
         outputDir.setAccessible(true);
         outputDir.set(compiler, "testworkdir" + File.separator + "output");
-        
+
         Field fileName = compiler.getClass().getDeclaredField("inputFileName");
         fileName.setAccessible(true);
-        fileName.set(compiler, "testworkdir" + File.separator + "test.asn");
-        
+        fileName.set(compiler, "/org/bn/compiler/parser/test.asn");
+
         Field ns = compiler.getClass().getDeclaredField("namespace");
         ns.setAccessible(true);
         ns.set(compiler, "org.bn.coders.test_asn");
-        
+
         compiler.start();
     }
-    
+
     public void testCSStart() throws Exception {
         BNCompilerMojo compiler = new BNCompilerMojo();
         Field modulesPath = compiler.getClass().getDeclaredField("modulesPath");
         modulesPath.setAccessible(true);
-        modulesPath.set(compiler, "xslsrc" + File.separator + "modules");
-        
+        modulesPath.set(compiler, "/modules");
+
         Field moduleName = compiler.getClass().getDeclaredField("moduleName");
         moduleName.setAccessible(true);
         moduleName.set(compiler, "cs");
-        
+
         Field outputDir = compiler.getClass().getDeclaredField("outputDir");
         outputDir.setAccessible(true);
         outputDir.set(compiler, "testworkdir" + File.separator + "output-cs");
-        
+
         Field fileName = compiler.getClass().getDeclaredField("inputFileName");
         fileName.setAccessible(true);
-        fileName.set(compiler, "testworkdir" + File.separator + "test.asn");
-        
+        fileName.set(compiler, "/org/bn/compiler/parser/test.asn");
+
         Field ns = compiler.getClass().getDeclaredField("namespace");
         ns.setAccessible(true);
         ns.set(compiler, "org.bn.coders.test_asn");
-        
+
         compiler.start();
     }
 }

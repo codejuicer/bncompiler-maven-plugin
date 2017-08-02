@@ -15,7 +15,7 @@ bncompiler plugin is available at [Maven Central] (http://search.maven.org/#brow
 
 ### Integration with Maven
 
-To use the official release of java2csharp, please use the following snippet in your pom.xml
+To use the official release of bncompiler-maven-plugin, please use the following snippet in your pom.xml
 
 ```xml
     <build>

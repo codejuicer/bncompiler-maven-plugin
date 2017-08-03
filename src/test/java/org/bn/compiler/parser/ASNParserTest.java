@@ -40,7 +40,7 @@ public class ASNParserTest extends TestCase {
         InputStream stream = getClass().getResourceAsStream(
                                  "/org/bn/compiler/parser/test.asn");
         ASNLexer  lexer  = new ASNLexer(stream);
-        ASNParser parser = new ASNParser(lexer);
+        ASNParser parser = new ASNParser(new LogStub(), lexer);
         ASNModule module = new ASNModule();
 
         parser.module_definition(module);

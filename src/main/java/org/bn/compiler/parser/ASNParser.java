@@ -13,6 +13,7 @@ import antlr.TokenBuffer;
 import antlr.TokenStream;
 import antlr.TokenStreamException;
 import antlr.collections.impl.BitSet;
+import org.apache.maven.plugin.logging.Log;
 import org.bn.compiler.parser.model.ASNModule;
 import org.bn.compiler.parser.model.AsnAny;
 import org.bn.compiler.parser.model.AsnBitOrOctetStringValue;
@@ -63,23 +64,26 @@ import org.bn.compiler.parser.model.OperationMacro;
 import org.bn.compiler.parser.model.SymbolsFromModule;
 
 public class ASNParser extends antlr.LLkParser implements ASNTokenTypes {
+    private Log logger;
 
-    protected ASNParser(TokenBuffer tokenBuf, int k) {
+    protected ASNParser(Log logger, TokenBuffer tokenBuf, int k) {
         super(tokenBuf, k);
         tokenNames = _tokenNames;
+        this.logger = logger;
     }
 
-    public ASNParser(TokenBuffer tokenBuf) {
-        this(tokenBuf, 3);
+    public ASNParser(Log logger, TokenBuffer tokenBuf) {
+        this(logger, tokenBuf, 3);
     }
 
-    protected ASNParser(TokenStream lexer, int k) {
+    protected ASNParser(Log logger, TokenStream lexer, int k) {
         super(lexer, k);
         tokenNames = _tokenNames;
+        this.logger = logger;
     }
 
-    public ASNParser(TokenStream lexer) {
-        this(lexer, 3);
+    public ASNParser(Log logger, TokenStream lexer) {
+        this(logger, lexer, 3);
     }
 
     public ASNParser(ParserSharedInputState state) {
@@ -860,7 +864,7 @@ public class ASNParser extends antlr.LLkParser implements ASNTokenTypes {
                             ((ErrorMacro)obj).name = up.getText();
                             module.asnTypes.macroErrors.add((ErrorMacro)obj);
                         } else {
-                            System.out.println("Unknown Type" + (obj.getClass().getName()));
+                            logger.warn("Unknown Type" + (obj.getClass().getName()));
                         }
 
                     }
@@ -907,7 +911,7 @@ public class ASNParser extends antlr.LLkParser implements ASNTokenTypes {
                             val.typeName = ((ObjectType)objv).BUILTINTYPE;
                             module.asnValues.add(val);
                         } else {
-                            System.out.println("Value not defined  " + (objv.getClass().getName()));
+                            logger.warn("Value not defined  " + (objv.getClass().getName()));
                         }
 
                     }

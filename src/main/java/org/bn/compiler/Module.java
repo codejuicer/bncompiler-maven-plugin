@@ -40,14 +40,19 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.maven.plugin.logging.Log;
+
 public class Module {
     private File[] moduleFiles = null;
     private String moduleName;
     private String outputDir;
     private String modulesDir;
     private String targetDir;
+    private Log logger;
 
-    public Module(String modulesPath, String name, String outputDir, String targetDir) throws Exception {
+    public Module(Log logger, String modulesPath, String name, String outputDir, String targetDir)
+        throws Exception {
+        this.logger = logger;
         this.targetDir = targetDir;
         setModuleName(name);
         setOutputDir(outputDir);
@@ -75,7 +80,8 @@ public class Module {
         return result;
     }
 
-    private void extractSubDir(URI zipFileUri, String pathInsideZip, final Path targetDir) throws IOException {
+    private void extractSubDir(URI zipFileUri, String pathInsideZip, final Path targetDir)
+        throws IOException {
         FileSystem zipFs = FileSystems.newFileSystem(zipFileUri, Collections.<String, Object> emptyMap());
         final Path pathInZip = zipFs.getPath(pathInsideZip);
         Files.walkFileTree(pathInZip, new SimpleFileVisitor<Path>() {
@@ -95,9 +101,9 @@ public class Module {
     }
 
     private File retrieveModulesFiles(String path) throws URISyntaxException, IOException {
-        System.out.println("retrieveModulesFiles " + path);
+        logger.debug("retrieveModulesFiles " + path);
         URI uri = this.getClass().getResource(path).toURI();
-        System.out.println("uri " + uri.toString());
+        logger.debug("uri " + uri.toString());
         Path modulesPath;
         if (uri.getScheme().equals("jar")) {
             File modulesDirFile = new File(targetDir + modulesDir);
@@ -106,14 +112,14 @@ public class Module {
         } else {
             modulesPath = Paths.get(uri);
         }
-        System.out.println("modulesPath " + modulesPath.toString());
+        logger.debug("modulesPath " + modulesPath.toString());
 
         return modulesPath.toFile();
     }
 
     private void loadTransformations() throws Exception {
-        System.out.println("modulesPath = " + getModulesPath());
-        System.out.println("moduleName = " + getModuleName());
+        logger.debug("modulesPath = " + getModulesPath());
+        logger.debug("moduleName = " + getModuleName());
 
         File basePath = retrieveModulesFiles(getModulesPath() + "/" + getModuleName());
 
@@ -133,15 +139,15 @@ public class Module {
 
                 transformer.setErrorListener(new ErrorListener() {
                     public void warning(TransformerException exception) {
-                        System.err.println("[W] Warning:" + exception);
+                        logger.warn("[W] Warning:" + exception);
                     }
 
                     public void error(TransformerException exception) {
-                        System.err.println("[!] Error:" + exception);
+                        logger.error("[!] Error:" + exception);
                     }
 
                     public void fatalError(TransformerException exception) {
-                        System.err.println("[!!!] Fatal error:" + exception);
+                        logger.error("[!!!] Fatal error:" + exception);
                     }
                 });
 

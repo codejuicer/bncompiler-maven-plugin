@@ -100,7 +100,7 @@ public class BNCompilerMojo extends AbstractMojo {
     private ASN1Model createModelFromStream() throws Exception {
         InputStream stream = retrieveASN1file(inputFileName);
         ASNLexer lexer = new ASNLexer(stream);
-        ASNParser parser = new ASNParser(lexer);
+        ASNParser parser = new ASNParser(getLog(), lexer);
         ASNModule module = new ASNModule();
 
         parser.module_definition(module);
@@ -115,17 +115,16 @@ public class BNCompilerMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         try {
             modulesPath = modulesPath.replace("\\", "/");
-            System.out.println("BinaryNotes compiler v" + version);
-            System.out.println("        (c) 2006-2011 Abdulla G. Abdurakhmanov");
-            System.out.println("modulesPath = " + modulesPath);
-            System.out.println("moduleName = " + moduleName);
-            System.out.println("outputDir = " + outputDir);
-            System.out.println("inputFileName = " + inputFileName);
-            System.out.println("namespace = " + namespace);
-            System.out.println("generateModelOnly = " + generateModelOnly);
+            getLog().info("BinaryNotes compiler v" + version);
+            getLog().debug("modulesPath = " + modulesPath);
+            getLog().debug("moduleName = " + moduleName);
+            getLog().debug("outputDir = " + outputDir);
+            getLog().debug("inputFileName = " + inputFileName);
+            getLog().debug("namespace = " + namespace);
+            getLog().debug("generateModelOnly = " + generateModelOnly);
             start();
         } catch (Exception ex) {
-            System.err.println(ex);
+            getLog().error("Error during plugin start", ex);
         }
     }
 
@@ -136,14 +135,14 @@ public class BNCompilerMojo extends AbstractMojo {
             Build build = model.getBuild();
             targetDirectory = build.getDirectory();
         }
-        Module module = new Module(modulesPath, moduleName, outputDireWithNamespace, targetDirectory);
+        Module module = new Module(getLog(), modulesPath, moduleName, outputDireWithNamespace, targetDirectory);
         startForModule(module);
     }
 
     private void startForModule(Module module) throws Exception {
         if (!generateModelOnly) {
-            System.out.println("Current directory: " + new File(".").getCanonicalPath());
-            System.out.println("Compiling file: " + inputFileName);
+            getLog().debug("Current directory: " + new File(".").getCanonicalPath());
+            getLog().debug("Compiling file: " + inputFileName);
             ByteArrayOutputStream outputXml = new ByteArrayOutputStream(65535);
             createModel(outputXml, module);
             InputStream stream = new ByteArrayInputStream(outputXml.toByteArray());

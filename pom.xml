@@ -17,7 +17,7 @@
 
 	<artifactId>bncompiler-maven-plugin</artifactId>
 	<groupId>org.codejuicer</groupId>
-	<version>1.6.0</version>
+	<version>1.6.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 	<name>Java compiler for ASN1 model</name>
 	<url>https://github.com/codejuicer/bncompiler-maven-plugin</url>

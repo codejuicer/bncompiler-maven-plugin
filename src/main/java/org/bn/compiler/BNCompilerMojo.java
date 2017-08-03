@@ -4,16 +4,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
+import java.net.URL;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -77,11 +73,22 @@ public class BNCompilerMojo extends AbstractMojo {
     }
 
     private InputStream retrieveASN1file(String path) throws URISyntaxException, IOException {
-        String inputFile = this.getClass().getResource(path).getFile();
-                  
-        return new FileInputStream(inputFile);
+        InputStream ret = null;
+        File f = new File(path);
+        if (f.exists() && !f.isDirectory()) {
+            ret = new FileInputStream(path);
+        } else {
+            URL resource = this.getClass().getResource(path);
+            if (resource != null) {
+                String inputFile = resource.getFile();
+                ret = new FileInputStream(inputFile);
+            } else {
+                throw new FileNotFoundException("Wrong asn1 input file " + path);
+            }
+        }
+        return ret;
     }
-    
+
     private ASN1Model createModelFromStream() throws Exception {
         InputStream stream = retrieveASN1file(inputFileName);
         ASNLexer lexer = new ASNLexer(stream);
@@ -113,7 +120,7 @@ public class BNCompilerMojo extends AbstractMojo {
             System.err.println(ex);
         }
     }
-    
+
     public void start() throws Exception {
         String outputDireWithNamespace = outputDir + File.separator + namespace.replace(".", File.separator);
         Module module = new Module(modulesPath, moduleName, outputDireWithNamespace);

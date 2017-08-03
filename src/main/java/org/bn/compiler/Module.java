@@ -25,8 +25,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 
 import javax.xml.transform.ErrorListener;
@@ -40,55 +44,74 @@ public class Module {
     private File[] moduleFiles = null;
     private String moduleName, outputDir, modulesPath;
 
-
-    public Module(String modulesPath, String name, String outputDir)
-            throws Exception {
+    public Module(String modulesPath, String name, String outputDir) throws Exception {
         setModuleName(name);
         setOutputDir(outputDir);
         setModulesPath(modulesPath);
-        checkFolders();
+        checkFolders(outputDir);
         loadTransformations();
     }
 
-    private void checkFolders() throws FileNotFoundException {
-        File basePath = new File(outputDir);
+    private Path checkFolders(String path) throws FileNotFoundException {
+        File basePath = new File(path);
         if (!basePath.exists()) {
             boolean ret = basePath.mkdirs();
             if (!ret) {
                 throw new FileNotFoundException("Cannot create directory: " + basePath.getPath());
             }
         }
-
+        return basePath.toPath();
     }
-    
+
     private File createOutputFileForInput(File input) {
-        String fileName = input.getName().substring(0,
-                              input.getName().lastIndexOf(".")) + "."
-                                  + getModuleName();
+        String fileName = input.getName().substring(0, input.getName().lastIndexOf(".")) + "."
+                          + getModuleName();
         File result = new File(getOutputDir(), fileName);
 
         return result;
     }
 
+    private void extractSubDir(URI zipFileUri, String pathInsideZip, final Path targetDir) throws IOException {
+        FileSystem zipFs = FileSystems.newFileSystem(zipFileUri, Collections.<String, Object> emptyMap());
+        final Path pathInZip = zipFs.getPath(pathInsideZip);
+        Files.walkFileTree(pathInZip, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path filePath, BasicFileAttributes attrs) throws IOException {
+                // Make sure that we conserve the hierachy of files and folders inside the zip
+                Path relativePathInZip = pathInZip.relativize(filePath);
+                Path targetPath = targetDir.resolve(relativePathInZip.toString());
+                Files.createDirectories(targetPath.getParent());
+
+                // And extract the file
+                Files.copy(filePath, targetPath);
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
     private File retrieveModulesFiles(String path) throws URISyntaxException, IOException {
+        System.out.println("retrieveModulesFiles " + path);
         URI uri = this.getClass().getResource(path).toURI();
+        System.out.println("uri " + uri.toString());
         Path modulesPath;
         if (uri.getScheme().equals("jar")) {
-            FileSystem fileSystem = FileSystems.newFileSystem(uri, Collections.<String, Object>emptyMap());
-            modulesPath = fileSystem.getPath("/resources");
+            File basePath = new File(path);
+            modulesPath = basePath.toPath();
+            extractSubDir(uri, path, modulesPath);
         } else {
             modulesPath = Paths.get(uri);
         }
-          
+        System.out.println("modulesPath " + modulesPath.toString());
+
         return modulesPath.toFile();
     }
-    
+
     private void loadTransformations() throws Exception {
         System.out.println("modulesPath = " + getModulesPath());
         System.out.println("moduleName = " + getModuleName());
-        
-        File basePath =retrieveModulesFiles(getModulesPath() + File.separator
-                             + getModuleName());
+
+        File basePath = retrieveModulesFiles(getModulesPath() + "/" + getModuleName());
 
         if (basePath.isDirectory()) {
             moduleFiles = basePath.listFiles();
@@ -102,16 +125,17 @@ public class Module {
 
         for (File file : moduleFiles) {
             if (file.isFile()) {
-                Transformer transformer =
-                    factory.newTransformer(new StreamSource(file));
+                Transformer transformer = factory.newTransformer(new StreamSource(file));
 
                 transformer.setErrorListener(new ErrorListener() {
                     public void warning(TransformerException exception) {
                         System.err.println("[W] Warning:" + exception);
                     }
+
                     public void error(TransformerException exception) {
                         System.err.println("[!] Error:" + exception);
                     }
+
                     public void fatalError(TransformerException exception) {
                         System.err.println("[!!!] Fatal error:" + exception);
                     }
@@ -119,8 +143,7 @@ public class Module {
 
                 File outputFile = createOutputFileForInput(file);
 
-                transformer.transform(new StreamSource(stream),
-                                      new StreamResult(outputFile));
+                transformer.transform(new StreamSource(stream), new StreamResult(outputFile));
             }
         }
     }
@@ -149,4 +172,3 @@ public class Module {
         this.outputDir = outputDir;
     }
 }
-

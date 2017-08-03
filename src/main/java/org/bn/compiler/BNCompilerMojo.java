@@ -16,12 +16,15 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 
+import org.apache.maven.model.Build;
+import org.apache.maven.model.Model;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
+import org.apache.maven.project.MavenProject;
 import org.bn.compiler.parser.ASNLexer;
 import org.bn.compiler.parser.ASNParser;
 import org.bn.compiler.parser.model.ASN1Model;
@@ -48,6 +51,11 @@ public class BNCompilerMojo extends AbstractMojo {
 
     @Parameter(required = false)
     private Boolean generateModelOnly;
+
+    @Parameter(readonly = true, defaultValue = "${project}")
+    private MavenProject project;
+
+    private String targetDirectory = "./";
 
     public BNCompilerMojo() {
         generateModelOnly = false;
@@ -106,7 +114,7 @@ public class BNCompilerMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         try {
-            modulesPath.replace("\\", File.separator);
+            modulesPath = modulesPath.replace("\\", "/");
             System.out.println("BinaryNotes compiler v" + version);
             System.out.println("        (c) 2006-2011 Abdulla G. Abdurakhmanov");
             System.out.println("modulesPath = " + modulesPath);
@@ -123,7 +131,12 @@ public class BNCompilerMojo extends AbstractMojo {
 
     public void start() throws Exception {
         String outputDireWithNamespace = outputDir + File.separator + namespace.replace(".", File.separator);
-        Module module = new Module(modulesPath, moduleName, outputDireWithNamespace);
+        if (project != null) {
+            Model model = project.getModel();
+            Build build = model.getBuild();
+            targetDirectory = build.getDirectory();
+        }
+        Module module = new Module(modulesPath, moduleName, outputDireWithNamespace, targetDirectory);
         startForModule(module);
     }
 

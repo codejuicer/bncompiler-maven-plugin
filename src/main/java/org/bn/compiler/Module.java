@@ -42,9 +42,13 @@ import javax.xml.transform.stream.StreamSource;
 
 public class Module {
     private File[] moduleFiles = null;
-    private String moduleName, outputDir, modulesPath;
+    private String moduleName;
+    private String outputDir;
+    private String modulesDir;
+    private String targetDir;
 
-    public Module(String modulesPath, String name, String outputDir) throws Exception {
+    public Module(String modulesPath, String name, String outputDir, String targetDir) throws Exception {
+        this.targetDir = targetDir;
         setModuleName(name);
         setOutputDir(outputDir);
         setModulesPath(modulesPath);
@@ -96,8 +100,8 @@ public class Module {
         System.out.println("uri " + uri.toString());
         Path modulesPath;
         if (uri.getScheme().equals("jar")) {
-            File basePath = new File(path);
-            modulesPath = basePath.toPath();
+            File modulesDirFile = new File(targetDir + modulesDir);
+            modulesPath = modulesDirFile.toPath();
             extractSubDir(uri, path, modulesPath);
         } else {
             modulesPath = Paths.get(uri);
@@ -153,7 +157,7 @@ public class Module {
     }
 
     public String getModulesPath() {
-        return modulesPath;
+        return modulesDir;
     }
 
     public String getOutputDir() {
@@ -165,7 +169,7 @@ public class Module {
     }
 
     private void setModulesPath(String modulesPath) {
-        this.modulesPath = modulesPath;
+        this.modulesDir = modulesPath;
     }
 
     private void setOutputDir(String outputDir) {
